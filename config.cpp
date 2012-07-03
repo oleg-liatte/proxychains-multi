@@ -76,14 +76,14 @@ ostream& operator<<(ostream& s, const in_addr& v)
 
 ostream& operator<<(ostream& s, const net_addr& v)
 {
-    s << v.ip << ":" << v.port;
+    s << v.ip << ":" << ntohs(v.port);
     return s;
 }
 
 
 ostream& operator<<(ostream& s, const net_addr_filter& v)
 {
-    s << v.ip << "/" << v.net_mask_width << ":" << v.port;
+    s << v.ip << "/" << v.net_mask_width << ":" << ntohs(v.port);
     return s;
 }
 

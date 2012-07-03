@@ -199,7 +199,7 @@ true|yes|y {
     t[yyleng] = 0;
 
     char* endp = 0;
-    unsigned long r = strtoul(t, &endp, 10);
+    unsigned long r = strtoul(t+1, &endp, 10);
     if(*endp == '\0' && r <= 65535)
     {
         yylval->p = htons(r);
