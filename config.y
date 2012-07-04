@@ -199,13 +199,13 @@ net_addr_filter:
     IP_ADDR
         {
             $$.ip = $1;
-            $$.net_mask_width = 0;
+            $$.net_mask_width = 32;
             $$.port = 0;
         }
     | NET_ADDR
         {
             $$.ip = $1.ip;
-            $$.net_mask_width = 0;
+            $$.net_mask_width = 32;
             $$.port = $1.port;
         }
     | NET_ADDR_FILTER

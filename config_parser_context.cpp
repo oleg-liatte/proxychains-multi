@@ -36,7 +36,9 @@ bool config_parser_context::open_file(const char* fileName)
     {
         configset_in(m_file, m_scanner);
         m_fileName = fileName;
+#ifdef DEBUG
         std::cerr << "reading config: \"" << fileName << "\"" << std::endl;
+#endif
         return true;
     }
     else
