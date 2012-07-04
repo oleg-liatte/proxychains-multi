@@ -15,8 +15,8 @@ config_parser_context::config_parser_context():
     m_currentFilterAction(FILTER_SKIP)
 {
     configlex_init(&m_scanner);
-    //configset_debug(1, m_scanner);
-    //configdebug = 1;
+//     configset_debug(1, m_scanner);
+//     configdebug = 1;
 }
 
 
@@ -36,7 +36,7 @@ bool config_parser_context::open_file(const char* fileName)
     {
         configset_in(m_file, m_scanner);
         m_fileName = fileName;
-        //printf("reading config: %s\n", fileName);
+        std::cerr << "reading config: \"" << fileName << "\"" << std::endl;
         return true;
     }
     else

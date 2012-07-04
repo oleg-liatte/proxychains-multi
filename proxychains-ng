@@ -1,9 +1,11 @@
 #!/bin/sh
-echo "ProxyChains-3.1 (http://proxychains.sf.net)"
+echo "proxychains-ng-1.0"
+
 if [ $# = 0 ] ; then
 	echo "	usage:"
-	echo "		proxychains <prog> [args]"
+	echo "		proxychains-ng <prog> [args]"
 	exit
 fi
-export LD_PRELOAD=libproxychains.so
+
+export LD_PRELOAD=libproxychains-ng.so
 exec "$@"

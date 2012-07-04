@@ -28,7 +28,15 @@ set(SOURCES
 set(CMAKE_CXX_FLAGS -Wall)
 
 add_library(proxychains-ng SHARED ${SOURCES})
+set_target_properties(proxychains-ng
+    PROPERTIES VERSION "1.0"
+    SOVERSION "1"
+)
 
 target_link_libraries(proxychains-ng
     dl
 )
+
+install(TARGETS proxychains-ng DESTINATION /usr/lib)
+install(PROGRAMS proxychains-ng proxyresolv-ng DESTINATION /usr/bin)
+install(FILES proxychains-ng.conf DESTINATION /etc)

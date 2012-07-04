@@ -683,42 +683,52 @@ static filter_action get_filter_action(
     in_addr_t target_ip,
     unsigned short target_port)
 {
-//     net_addr target;
-//     target.ip.s_addr = target_ip;
-//     target.port = ntohs(target_port);
-//     cerr << "examining target " << target << ":" << endl;
-
     for(proxy_chain::filters_t::const_iterator i = filters.begin();
         i != filters.end();
         i++)
     {
         // check IP
-
-        int shift = 32 - i->addr_filter.net_mask_width;
-        if(shift < 0)
+        if(i->addr_filter.net_mask_width > 0)
         {
-            shift = 0;
-        }
+            int shift = 32 - i->addr_filter.net_mask_width;
+            if(shift < 0)
+            {
+                shift = 0;
+            }
 
-        if(ntohl(i->addr_filter.ip.s_addr ^ target_ip) >> shift != 0)
-        {
-            //cerr << "  " << *i << " doesn't match (addr)" << endl;
-            continue;
+            if((ntohl(i->addr_filter.ip.s_addr ^ target_ip) >> shift) != 0)
+            {
+                if(!global_config.quiet_mode)
+                {
+                    cerr << "  " << *i << " doesn't match (addr)" << endl;
+                }
+                continue;
+            }
         }
 
         // check port
-
-        if(i->addr_filter.port != 0 && i->addr_filter.port != ntohs(target_port))
+        if(i->addr_filter.port != 0 && i->addr_filter.port != target_port)
         {
-            //cerr << "  " << *i << " doesn't match (port)" << endl;
+            if(!global_config.quiet_mode)
+            {
+                cerr << "  " << *i << " doesn't match (port)" << endl;
+            }
             continue;
         }
 
-        //cerr << "  " << *i << " matches" << endl;
+        if(!global_config.quiet_mode)
+        {
+            cerr << "  " << *i << " matches" << endl;
+        }
+
         return i->action;
     }
 
-    //cerr << "  skipping chain" << endl;
+    if(!global_config.quiet_mode)
+    {
+        cerr << "  skipping chain" << endl;
+    }
+
     return FILTER_SKIP;
 }
 
@@ -734,6 +744,23 @@ int select_and_connect_proxy_chain(
         i != config->chains.end();
         i++)
     {
+        if(!global_config.quiet_mode)
+        {
+            net_addr target;
+            target.ip.s_addr = target_ip;
+            target.port = target_port;
+            cerr << "examining target " << target << " for ";
+            if(!i->name.empty())
+            {
+                cerr << "chain \"" << i->name << "\"";
+            }
+            else
+            {
+                cerr << "unnamed chain";
+            }
+            cerr << ":" << endl;
+        }
+
         filter_action action = get_filter_action(
                                    i->filters,
                                    target_ip,
