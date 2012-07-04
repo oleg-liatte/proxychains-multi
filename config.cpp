@@ -158,10 +158,9 @@ bool proxychains_config::read()
         return false;
     }
 
-    if(!quiet_mode)
-    {
-        cerr << *this;
-    }
+#ifdef DEBUG
+    cerr << *this;
+#endif
 
     return true;
 }

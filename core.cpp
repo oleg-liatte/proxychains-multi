@@ -698,10 +698,9 @@ static filter_action get_filter_action(
 
             if((ntohl(i->addr_filter.ip.s_addr ^ target_ip) >> shift) != 0)
             {
-                if(!global_config.quiet_mode)
-                {
-                    cerr << "  " << *i << " doesn't match (addr)" << endl;
-                }
+#ifdef DEBUG
+                cerr << "  " << *i << " doesn't match (addr)" << endl;
+#endif
                 continue;
             }
         }
@@ -709,25 +708,22 @@ static filter_action get_filter_action(
         // check port
         if(i->addr_filter.port != 0 && i->addr_filter.port != target_port)
         {
-            if(!global_config.quiet_mode)
-            {
-                cerr << "  " << *i << " doesn't match (port)" << endl;
-            }
+#ifdef DEBUG
+            cerr << "  " << *i << " doesn't match (port)" << endl;
+#endif
             continue;
         }
 
-        if(!global_config.quiet_mode)
-        {
-            cerr << "  " << *i << " matches" << endl;
-        }
+#ifdef DEBUG
+        cerr << "  " << *i << " matches" << endl;
+#endif
 
         return i->action;
     }
 
-    if(!global_config.quiet_mode)
-    {
-        cerr << "  skipping chain" << endl;
-    }
+#ifdef DEBUG
+    cerr << "  skipping chain" << endl;
+#endif
 
     return FILTER_SKIP;
 }
@@ -744,7 +740,7 @@ int select_and_connect_proxy_chain(
         i != config->chains.end();
         i++)
     {
-        if(!global_config.quiet_mode)
+#ifdef DEBUG
         {
             net_addr target;
             target.ip.s_addr = target_ip;
@@ -760,6 +756,7 @@ int select_and_connect_proxy_chain(
             }
             cerr << ":" << endl;
         }
+#endif
 
         filter_action action = get_filter_action(
                                    i->filters,

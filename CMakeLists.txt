@@ -27,6 +27,10 @@ set(SOURCES
 
 set(CMAKE_CXX_FLAGS -Wall)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DDEBUG)
+endif()
+
 add_library(proxychains-ng SHARED ${SOURCES})
 set_target_properties(proxychains-ng
     PROPERTIES VERSION "1.0"
