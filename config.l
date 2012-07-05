@@ -66,6 +66,8 @@ tcp_read_timeout    return ID_TCP_READ_TIMEOUT;
 proxy               return ID_PROXY;
 filter              return ID_FILTER;
 
+any                 return ID_ANY;
+
 {int_value} {
     char t[128];
     if(yyleng > sizeof(t))

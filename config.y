@@ -33,6 +33,8 @@
 %token ID_PROXY;
 %token ID_FILTER;
 
+%token ID_ANY;
+
 /* types */
 %token <i> INT
 %token <b> BOOLEAN
@@ -217,6 +219,12 @@ net_addr_filter:
             $$.ip.s_addr = 0;
             $$.net_mask_width = 0;
             $$.port = $1;
+        }
+    | ID_ANY
+        {
+            $$.ip.s_addr = 0;
+            $$.net_mask_width = 0;
+            $$.port = 0;
         }
     ;
 
