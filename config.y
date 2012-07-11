@@ -29,6 +29,7 @@
 %token ID_PROXY_DNS;
 %token ID_TCP_READ_TIMEOUT;
 %token ID_TCP_CONNECT_TIMEOUT;
+%token ID_DEFAULT_FILTER_ACTION;
 
 %token ID_PROXY;
 %token ID_FILTER;
@@ -107,6 +108,10 @@ global_param:
         {
             config->tcp_read_timeout = $2;
         }
+    | ID_DEFAULT_FILTER_ACTION FILTER_ACTION
+        {
+            config->default_filter_action = $2;
+        }
     ;
 
 chain_head:
@@ -117,7 +122,8 @@ chain_head:
                 config->type,
                 config->chain_len,
                 config->tcp_connect_timeout,
-                config->tcp_read_timeout
+                config->tcp_read_timeout,
+                config->default_filter_action
             ));
         }
     | '[' ID_CHAIN ']'
@@ -127,7 +133,8 @@ chain_head:
                 config->type,
                 config->chain_len,
                 config->tcp_connect_timeout,
-                config->tcp_read_timeout
+                config->tcp_read_timeout,
+                config->default_filter_action
             ));
         }
     ;
@@ -157,6 +164,10 @@ chain_param:
     | ID_TCP_READ_TIMEOUT INT
         {
             config->chains.back().tcp_read_timeout = $2;
+        }
+    | ID_DEFAULT_FILTER_ACTION FILTER_ACTION
+        {
+            config->chains.back().default_filter_action = $2;
         }
     | ID_PROXY PROXY_TYPE NET_ADDR STRING STRING
         {

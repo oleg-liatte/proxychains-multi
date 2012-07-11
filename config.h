@@ -108,13 +108,15 @@ struct proxy_chain
         chain_type type,
         int chain_len,
         int tcp_connect_timeout,
-        int tcp_read_timeout):
+        int tcp_read_timeout,
+        filter_action default_filter_action):
 
         name(nullToEmpty(name)),
         type(type),
         chain_len(chain_len),
         tcp_connect_timeout(tcp_connect_timeout),
-        tcp_read_timeout(tcp_read_timeout)
+        tcp_read_timeout(tcp_read_timeout),
+        default_filter_action(default_filter_action)
     {
     }
 
@@ -126,6 +128,7 @@ struct proxy_chain
     int chain_len;
     int tcp_connect_timeout;
     int tcp_read_timeout;
+    filter_action default_filter_action;
     proxies_t proxies;
     filters_t filters;
 };
@@ -139,7 +142,8 @@ struct proxychains_config
         type(DYNAMIC_TYPE),
         chain_len(1),
         tcp_connect_timeout(10 * 1000),
-        tcp_read_timeout(4 * 1000)
+        tcp_read_timeout(4 * 1000),
+        default_filter_action(FILTER_ACCEPT)
     {
     }
 
@@ -156,6 +160,7 @@ struct proxychains_config
     int chain_len;
     int tcp_connect_timeout;
     int tcp_read_timeout;
+    filter_action default_filter_action;
 };
 
 

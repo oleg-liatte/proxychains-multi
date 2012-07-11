@@ -679,12 +679,12 @@ error_strict:
 
 
 static filter_action get_filter_action(
-    const proxy_chain::filters_t& filters,
+    const proxy_chain& chain,
     in_addr_t target_ip,
     unsigned short target_port)
 {
-    for(proxy_chain::filters_t::const_iterator i = filters.begin();
-        i != filters.end();
+    for(proxy_chain::filters_t::const_iterator i = chain.filters.begin();
+        i != chain.filters.end();
         i++)
     {
         // check IP
@@ -725,7 +725,7 @@ static filter_action get_filter_action(
     cerr << "  skipping chain" << endl;
 #endif
 
-    return FILTER_SKIP;
+    return chain.default_filter_action;
 }
 
 
@@ -759,7 +759,7 @@ int select_and_connect_proxy_chain(
 #endif
 
         filter_action action = get_filter_action(
-                                   i->filters,
+                                   *i,
                                    target_ip,
                                    target_port);
 
