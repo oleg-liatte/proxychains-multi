@@ -84,26 +84,6 @@ static void encode_base_64(char* src,char* dest,int max_len)
     *dest++=0;
 }
 
-#define LOG_BUFF 1024*20
-
-int proxychains_write_log(const char* str, ...)
-{
-    char buff[LOG_BUFF];
-    va_list arglist;
-    FILE * log_file;
-    log_file=stderr;
-    if (!global_config.quiet_mode)
-    {
-        va_start(arglist,str);
-        vsprintf(buff,str,arglist);
-        va_end(arglist);
-        fprintf(log_file,"%s",buff);
-        fflush(log_file);
-    }
-
-    return EXIT_SUCCESS;
-}
-
 static int write_n_bytes(int fd,char *buff,size_t size)
 {
     int i=0,wrote=0;
@@ -118,7 +98,7 @@ static int write_n_bytes(int fd,char *buff,size_t size)
     }
 }
 
-static int read_line(int fd, char *buff, size_t size)
+/*static int read_line(int fd, char *buff, size_t size)
 {
     int i,ready;
     struct pollfd pfd[1];
@@ -138,7 +118,7 @@ static int read_line(int fd, char *buff, size_t size)
         }
     }
     return -1;
-}
+}*/
 
 static int read_n_bytes(int fd,char *buff, size_t size)
 {
@@ -421,10 +401,13 @@ static int start_chain(int* fd, proxy_data* pd, const char* begin_mark)
         goto error;
     }
 
-    proxychains_write_log("%s-<>-%s:%d-",
-                          begin_mark,
-                          inet_ntoa(*(struct in_addr*)&pd->addr.ip),
-                          htons(pd->addr.port));
+    TRACE(
+        begin_mark
+        << "-<>-"
+        << inet_ntoa(*(struct in_addr*)&pd->addr.ip)
+        << ":"
+        << htons(pd->addr.port));
+
     pd->ps=PLAY_STATE;
     bzero(&addr,sizeof(addr));
     addr.sin_family = AF_INET;
@@ -440,7 +423,7 @@ static int start_chain(int* fd, proxy_data* pd, const char* begin_mark)
     return 0;
 
 error1:
-    proxychains_write_log("<--timeout\n");
+    TRACE("<--timeout" << endl);
 error:
     if(*fd != -1)
     {
@@ -514,9 +497,13 @@ static int chain_step(int ns, proxy_data *pfrom, proxy_data *pto)
 {
     int retcode=-1;
 
-    proxychains_write_log("<>-%s:%d-",
-                          inet_ntoa(*(struct in_addr*)&pto->addr.ip),
-                          htons(pto->addr.port));
+    TRACE(
+        "<>-"
+        << inet_ntoa(*(struct in_addr*)&pto->addr.ip)
+        << ":"
+        << htons(pto->addr.port)
+        << "-");
+
     retcode = tunnel_to(
         ns,
         pto->addr,
@@ -530,13 +517,13 @@ static int chain_step(int ns, proxy_data *pfrom, proxy_data *pto)
         break;
     case BLOCKED:
         pto->ps=BLOCKED_STATE;
-        proxychains_write_log("<--denied\n");
+        TRACE("<--denied" << endl);
         close(ns);
         errno = ECONNREFUSED;
         break;
     case SOCKET_ERROR:
         pto->ps=DOWN_STATE;
-        proxychains_write_log("<--timeout\n");
+        TRACE("<--timeout" << endl);
         close(ns);
         errno = ETIMEDOUT;
         break;
@@ -598,7 +585,7 @@ again:
                 goto again;
             p1=p2;
         }
-        proxychains_write_log(TP);
+        TRACE(TP);
         p3->addr=target_addr;
         if(SUCCESS!=chain_step(ns,p1,p3))
         {
@@ -621,7 +608,7 @@ again:
                 goto error_strict;
             p1=p2;
         }
-        proxychains_write_log(TP);
+        TRACE(TP);
         p3->addr=target_addr;
         if(SUCCESS!=chain_step(ns,p1,p3))
         {
@@ -646,7 +633,7 @@ again:
                 goto again;
             p1=p2;
         }
-        proxychains_write_log(TP);
+        TRACE(TP);
         p3->addr=target_addr;
         if(SUCCESS!=chain_step(ns,p1,p3))
         {
@@ -657,7 +644,7 @@ again:
     }
 
 done:
-    proxychains_write_log("<><>-OK\n");
+    TRACE("<><>-OK" << endl);
     dup2(ns,sock);
     close(ns);
     return 0;
@@ -668,7 +655,7 @@ error:
     return -1;
 
 error_more:
-    proxychains_write_log("\n!!!need more proxies!!!\n");
+    TRACE(endl << "!!!need more proxies!!!" << endl);
 error_strict:
     release_all(proxies);
     if(ns!=-1)
@@ -699,7 +686,7 @@ static filter_action get_filter_action(
             if((ntohl(i->addr_filter.ip.s_addr ^ target_ip) >> shift) != 0)
             {
 #ifdef DEBUG
-                cerr << "  " << *i << " doesn't match (addr)" << endl;
+                TRACE("  " << *i << " doesn't match (addr)" << endl);
 #endif
                 continue;
             }
@@ -709,20 +696,20 @@ static filter_action get_filter_action(
         if(i->addr_filter.port != 0 && i->addr_filter.port != target_port)
         {
 #ifdef DEBUG
-            cerr << "  " << *i << " doesn't match (port)" << endl;
+            TRACE("  " << *i << " doesn't match (port)" << endl);
 #endif
             continue;
         }
 
 #ifdef DEBUG
-        cerr << "  " << *i << " matches" << endl;
+        TRACE("  " << *i << " matches" << endl);
 #endif
 
         return i->action;
     }
 
 #ifdef DEBUG
-    cerr << "  skipping chain" << endl;
+    TRACE("  skipping chain" << endl);
 #endif
 
     return chain.default_filter_action;
@@ -745,16 +732,16 @@ int select_and_connect_proxy_chain(
             net_addr target;
             target.ip.s_addr = target_ip;
             target.port = target_port;
-            cerr << "examining target " << target << " for ";
+            TRACE("examining target " << target << " for ");
             if(!i->name.empty())
             {
-                cerr << "chain \"" << i->name << "\"";
+                TRACE("chain \"" << i->name << "\"");
             }
             else
             {
-                cerr << "unnamed chain";
+                TRACE("unnamed chain");
             }
-            cerr << ":" << endl;
+            TRACE(":" << endl);
         }
 #endif
 
@@ -768,7 +755,7 @@ int select_and_connect_proxy_chain(
             const net_addr target_addr = {target_ip, target_port};
             if(!i->name.empty())
             {
-                proxychains_write_log("chain \"%s\": ", i->name.c_str());
+                TRACE("chain \"" << i->name.c_str() << "\": ");
             }
             return connect_proxy_chain(
                        sock,
@@ -835,7 +822,7 @@ struct hostent* proxy_gethostbyname(const char *name)
     switch(pid) {
 
     case 0: // child
-        proxychains_write_log("|DNS-request| %s \n", name);
+        TRACE("|DNS-request| " << name  << endl);
         dup2(pipe_fd[1],1);
         //dup2(pipe_fd[1],2);
         //    putenv("LD_PRELOAD=");
@@ -863,11 +850,10 @@ got_buff:
         hostent_space.h_name = addr_name;
         hostent_space.h_length = sizeof (in_addr_t);
     }
-    proxychains_write_log("|DNS-response| %s is %s\n",
-                          name, inet_ntoa(*(struct in_addr*)&addr));
+    TRACE("|DNS-response| " << name << " is " << inet_ntoa(*(struct in_addr*)&addr)  << endl);
     return &hostent_space;
 err_dns:
-    proxychains_write_log("|DNS-response|: %s is not exist\n", name);
+    TRACE("|DNS-response|: " << name << " doesn't exist" << endl);
 err:
     return NULL;
 }

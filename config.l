@@ -56,10 +56,16 @@ ip4_addr            {int_value}\.{int_value}\.{int_value}\.{int_value}
 global              return ID_GLOBAL;
 chain               return ID_CHAIN;
 
+proxy_dns           return ID_PROXY_DNS;
+trace               return ID_TRACE;
+
+off                 return ID_OFF;
+stdout              return ID_STDOUT;
+stderr              return ID_STDERR;
+tty_only            return ID_TTY_ONLY;
+
 chain_type          return ID_CHAIN_TYPE;
 chain_len           return ID_CHAIN_LEN;
-quiet_mode          return ID_QUIET_MODE;
-proxy_dns           return ID_PROXY_DNS;
 tcp_connect_timeout return ID_TCP_CONNECT_TIMEOUT;
 tcp_read_timeout    return ID_TCP_READ_TIMEOUT;
 default_filter_action return ID_DEFAULT_FILTER_ACTION;

@@ -1,8 +1,15 @@
 #include "config.h"
 #include "config_parser_context.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <stdlib.h>
+
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 
@@ -11,6 +18,20 @@ using namespace std;
 
 
 proxychains_config global_config;
+
+
+namespace
+{
+
+    bool file_is_tty(const char* file)
+    {
+        int fd = open(file, O_WRONLY | O_NOCTTY);
+        bool r = isatty(fd);
+        close(fd);
+        return r;
+    }
+
+}
 
 
 ostream& operator<<(ostream& s, const proxy_type& v)
@@ -133,6 +154,35 @@ ostream& operator<<(ostream& s, const proxychains_config& v)
         s << *i << endl;
     }
     return s;
+}
+
+
+void proxychains_config::resetTrace()
+{
+    if(trace)
+    {
+        delete trace;
+        trace = 0;
+    }
+}
+
+
+void proxychains_config::setTrace(const char* file, bool tty_only)
+{
+    resetTrace();
+
+    if(!tty_only || file_is_tty(file))
+    {
+        ofstream* t = new ofstream(file, ios_base::out | ios_base::app);
+        if(t->is_open())
+        {
+            trace = t;
+        }
+        else
+        {
+            delete t;
+        }
+    }
 }
 
 

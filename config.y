@@ -1,5 +1,7 @@
 %{
 
+#include <string.h>
+
 #include <sstream>
 #include <cassert>
 
@@ -23,10 +25,16 @@
 %token ID_CHAIN
 
 /* parameters */
+%token ID_PROXY_DNS;
+%token ID_TRACE
+
+%token ID_OFF
+%token ID_STDOUT
+%token ID_STDERR
+%token ID_TTY_ONLY
+
 %token ID_CHAIN_TYPE;
 %token ID_CHAIN_LEN;
-%token ID_QUIET_MODE;
-%token ID_PROXY_DNS;
 %token ID_TCP_READ_TIMEOUT;
 %token ID_TCP_CONNECT_TIMEOUT;
 %token ID_DEFAULT_FILTER_ACTION;
@@ -50,6 +58,7 @@
 
 /* non-terminals */
 %type <naf> net_addr_filter
+%type <s> trace_file;
 
 /* destructors */
 %destructor { free($$); } STRING
@@ -84,9 +93,17 @@ global_params:
     ;
 
 global_param:
-    ID_QUIET_MODE BOOLEAN
+    ID_TRACE ID_OFF
         {
-            config->quiet_mode = $2;
+            config->resetTrace();
+        }
+    | ID_TRACE trace_file
+        {
+            config->setTrace($2, false);
+        }
+    | ID_TRACE ID_TTY_ONLY trace_file
+        {
+            config->setTrace($3, true);
         }
     | ID_PROXY_DNS BOOLEAN
         {
@@ -111,6 +128,22 @@ global_param:
     | ID_DEFAULT_FILTER_ACTION FILTER_ACTION
         {
             config->default_filter_action = $2;
+        }
+    ;
+
+trace_file:
+    ID_STDOUT
+        {
+            $$ = strdup("/dev/stdout");
+        }
+    | ID_STDERR
+        {
+            $$ = strdup("/dev/stderr");
+        }
+    | STRING
+        {
+            $$ = $1;
+            $1 = 0;
         }
     ;
 

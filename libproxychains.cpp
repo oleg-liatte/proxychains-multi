@@ -37,107 +37,136 @@
 #define     SOCKFAMILY(x)     (satosin(x)->sin_family)
 #define     MAX_CHAIN 30*1024
 
-static int init_l = 0;
+static bool initialized = false;
+static bool init_ok = false;
 
-static void init_lib()
+static bool init_lib()
 {
+    if(initialized)
+    {
+        return init_ok;
+    }
+
+    initialized = true;
+
 //    proxychains_write_log("ProxyChains-"VERSION
 //            " (http://proxychains.sf.net)\n");
 
-    if(!global_config.read())
-    {
-        exit(1);
-    }
-
     true_connect = (connect_t)dlsym(RTLD_NEXT, "connect");
-
-    if (!true_connect) {
+    if (!true_connect)
+    {
         fprintf(stderr, "Cannot load symbol 'connect' %s\n", dlerror());
         exit(1);
-    } else {
+    }
+    else
+    {
 //        PDEBUG( "loaded symbol 'connect'"
 //        " real addr %p  wrapped addr %p\n",
 //        true_connect, connect);
     }
-    true_gethostbyname = (gethostbyname_t)
-                         dlsym(RTLD_NEXT, "gethostbyname");
 
-    if (!true_gethostbyname) {
+    true_gethostbyname = (gethostbyname_t)dlsym(RTLD_NEXT, "gethostbyname");
+    if (!true_gethostbyname)
+    {
         fprintf(stderr, "Cannot load symbol 'gethostbyname' %s\n",
                 dlerror());
         exit(1);
-    } else {
+    }
+    else
+    {
 //        PDEBUG( "loaded symbol 'gethostbyname'"
 //        " real addr %p  wrapped addr %p\n",
 //        true_gethostbyname, gethostbyname);
     }
-    true_getaddrinfo = (getaddrinfo_t)
-                       dlsym(RTLD_NEXT, "getaddrinfo");
 
-    if (!true_getaddrinfo) {
+    true_getaddrinfo = (getaddrinfo_t)dlsym(RTLD_NEXT, "getaddrinfo");
+    if (!true_getaddrinfo)
+    {
         fprintf(stderr, "Cannot load symbol 'getaddrinfo' %s\n",
                 dlerror());
         exit(1);
-    } else {
+    }
+    else
+    {
 //        PDEBUG( "loaded symbol 'getaddrinfo'"
 //            " real addr %p  wrapped addr %p\n",
 //            true_getaddrinfo, getaddrinfo);
     }
-    true_freeaddrinfo = (freeaddrinfo_t)
-                        dlsym(RTLD_NEXT, "freeaddrinfo");
 
-    if (!true_freeaddrinfo) {
+    true_freeaddrinfo = (freeaddrinfo_t)dlsym(RTLD_NEXT, "freeaddrinfo");
+    if (!true_freeaddrinfo)
+    {
         fprintf(stderr, "Cannot load symbol 'freeaddrinfo' %s\n",
                 dlerror());
         exit(1);
-    } else {
+    }
+    else
+    {
 //        PDEBUG( "loaded symbol 'freeaddrinfo'"
 //            " real addr %p  wrapped addr %p\n",
 //            true_freeaddrinfo, freeaddrinfo);
     }
-    true_gethostbyaddr = (gethostbyaddr_t)
-                         dlsym(RTLD_NEXT, "gethostbyaddr");
 
-    if (!true_gethostbyaddr) {
+    true_gethostbyaddr = (gethostbyaddr_t)dlsym(RTLD_NEXT, "gethostbyaddr");
+    if (!true_gethostbyaddr)
+    {
         fprintf(stderr, "Cannot load symbol 'gethostbyaddr' %s\n",
                 dlerror());
         exit(1);
-    } else {
+    }
+    else
+    {
 //        PDEBUG( "loaded symbol 'gethostbyaddr'"
 //            " real addr %p  wrapped addr %p\n",
 //            true_gethostbyaddr, gethostbyaddr);
     }
-    true_getnameinfo = (getnameinfo_t)
-                       dlsym(RTLD_NEXT, "getnameinfo");
 
+    true_getnameinfo = (getnameinfo_t)dlsym(RTLD_NEXT, "getnameinfo");
     if (!true_getnameinfo) {
         fprintf(stderr, "Cannot load symbol 'getnameinfo' %s\n",
                 dlerror());
         exit(1);
-    } else {
+    }
+    else
+    {
 //        PDEBUG( "loaded symbol 'getnameinfo'"
 //            " real addr %p  wrapped addr %p\n",
 //            true_getnameinfo, getnameinfo);
     }
-    init_l = 1;
+
+    if(!global_config.read())
+    {
+        return false;
+    }
+
+    init_ok = true;
+    return true;
 }
 
 
 
 int connect (int sock, const struct sockaddr *addr, unsigned int len)
 {
-    int socktype=0,flags=0,ret=0;
+    if(!init_lib())
+    {
+        return true_connect(sock,addr,len);
+    }
 
-    if(!init_l)
-        init_lib();
+    int socktype = 0;
     socklen_t optlen = sizeof(socktype);
     getsockopt(sock,SOL_SOCKET,SO_TYPE,&socktype,&optlen);
-    if (! (SOCKFAMILY(*addr)==AF_INET  && socktype==SOCK_STREAM))
+    if(!(SOCKFAMILY(*addr)==AF_INET  && socktype==SOCK_STREAM))
+    {
         return true_connect(sock,addr,len);
-    flags=fcntl(sock, F_GETFL, 0);
+    }
+
+    int flags = fcntl(sock, F_GETFL, 0);
     if(flags & O_NONBLOCK)
+    {
         fcntl(sock, F_SETFL, !O_NONBLOCK);
-    ret=select_and_connect_proxy_chain(
+    }
+
+    int ret=select_and_connect_proxy_chain(
             sock,
             SOCKADDR(*addr),
             SOCKPORT(*addr),
@@ -162,43 +191,61 @@ int connect (int sock, const struct sockaddr *addr, unsigned int len)
 struct hostent *gethostbyname(const char *name)
 {
     PDEBUG("gethostbyname: %s\n",name);
-    if(!init_l)
-        init_lib();
-    if(global_config.proxy_dns)
-        return proxy_gethostbyname(name);
-    else
+    if(!init_lib())
+    {
         return true_gethostbyname(name);
+    }
 
-    return NULL;
+    if(global_config.proxy_dns)
+    {
+        return proxy_gethostbyname(name);
+    }
+    else
+    {
+        return true_gethostbyname(name);
+    }
 }
 
 int getaddrinfo(const char *node, const char *service,
                 const struct addrinfo *hints,
                 struct addrinfo **res)
 {
-    int ret = 0;
     PDEBUG("getaddrinfo: %s %s\n",node ,service);
-    if(!init_l)
-        init_lib();
-    if(global_config.proxy_dns)
-        ret = proxy_getaddrinfo(node, service, hints, res);
-    else
-        ret = true_getaddrinfo(node, service, hints, res);
 
-    return ret;
+    if(!init_lib())
+    {
+        return true_getaddrinfo(node, service, hints, res);
+    }
+
+    if(global_config.proxy_dns)
+    {
+        return proxy_getaddrinfo(node, service, hints, res);
+    }
+    else
+    {
+        return true_getaddrinfo(node, service, hints, res);
+    }
 }
+
 void freeaddrinfo(struct addrinfo *res)
 {
     PDEBUG("freeaddrinfo %p \n",res);
-    if(!init_l)
-        init_lib();
-    if(!global_config.proxy_dns)
+
+    if(!init_lib())
+    {
         true_freeaddrinfo(res);
-    else {
+        return;
+    }
+
+    if(!global_config.proxy_dns)
+    {
+        true_freeaddrinfo(res);
+    }
+    else
+    {
         free(res->ai_addr);
         free(res);
     }
-    return;
 }
 
 int getnameinfo (const struct sockaddr * sa,
@@ -207,12 +254,19 @@ int getnameinfo (const struct sockaddr * sa,
                  socklen_t servlen, int flags)
 {
     int ret = 0;
-    if(!init_l)
-        init_lib();
-    if(!global_config.proxy_dns) {
+    if(!init_lib())
+    {
+        return true_getnameinfo(sa,salen,host,hostlen,
+                               serv,servlen,flags);
+    }
+
+    if(!global_config.proxy_dns)
+    {
         ret = true_getnameinfo(sa,salen,host,hostlen,
                                serv,servlen,flags);
-    } else {
+    }
+    else
+    {
         if(hostlen)
             strncpy(host, inet_ntoa(SOCKADDR_2(*sa)),hostlen);
         if(servlen)
@@ -225,10 +279,18 @@ struct hostent *gethostbyaddr (const void *addr, socklen_t len,
                                int type)
 {
     PDEBUG("TODO: gethostbyaddr hook\n");
-    if(!init_l)
-        init_lib();
-    if(!global_config.proxy_dns)
+    if(!init_lib())
+    {
         return true_gethostbyaddr(addr,len,type);
-    return NULL;
+    }
+
+    if(!global_config.proxy_dns)
+    {
+        return true_gethostbyaddr(addr,len,type);
+    }
+    else
+    {
+        return NULL;
+    }
 }
 

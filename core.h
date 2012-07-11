@@ -42,7 +42,6 @@ int select_and_connect_proxy_chain(
     unsigned short target_port,
     proxychains_config* config);
 
-int proxychains_write_log(const char *str,...);
 struct hostent* proxy_gethostbyname(const char *name);
 
 

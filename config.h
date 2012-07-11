@@ -11,6 +11,9 @@
 #include <iostream>
 
 
+#define TRACE(x) do { if(global_config.trace) { *global_config.trace << x << std::flush; } } while(0)
+
+
 inline const char* nullToEmpty(const char* s)
 {
     return s ? s : "";
@@ -143,9 +146,19 @@ struct proxychains_config
         chain_len(1),
         tcp_connect_timeout(10 * 1000),
         tcp_read_timeout(4 * 1000),
-        default_filter_action(FILTER_ACCEPT)
+        default_filter_action(FILTER_SKIP),
+        trace(0)
     {
+        setTrace("/dev/stderr", true);
     }
+
+    ~proxychains_config()
+    {
+        resetTrace();
+    }
+
+    void resetTrace();
+    void setTrace(const char* file, bool tty_only);
 
     bool read();
 
@@ -161,6 +174,8 @@ struct proxychains_config
     int tcp_connect_timeout;
     int tcp_read_timeout;
     filter_action default_filter_action;
+    std::ostream* trace;
+
 };
 
 
