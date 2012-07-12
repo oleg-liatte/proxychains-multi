@@ -43,4 +43,4 @@ target_link_libraries(proxychains-ng
 
 install(TARGETS proxychains-ng DESTINATION /usr/lib)
 install(PROGRAMS proxychains-ng proxyresolv-ng DESTINATION /usr/bin)
-install(FILES proxychains-ng.conf DESTINATION /etc)
+install(FILES proxychains-ng.conf.skel RENAME proxychains-ng.conf DESTINATION /etc)
