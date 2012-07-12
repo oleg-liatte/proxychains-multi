@@ -157,32 +157,33 @@ ostream& operator<<(ostream& s, const proxychains_config& v)
 }
 
 
-void proxychains_config::resetTrace()
+void proxychains_config::setTrace(std::ostream* stream)
 {
-    if(trace)
+    if(trace != 0 && trace != &cout && trace != &cerr)
     {
         delete trace;
-        trace = 0;
     }
+    trace = stream;
 }
 
 
 void proxychains_config::setTrace(const char* file, bool tty_only)
 {
-    resetTrace();
-
     if(!tty_only || file_is_tty(file))
     {
-        ofstream* t = new ofstream(file, ios_base::out | ios_base::app);
+        ofstream* t = new ofstream(file);
         if(t->is_open())
         {
-            trace = t;
+            setTrace(t);
+            return;
         }
         else
         {
             delete t;
         }
     }
+
+    resetTrace();
 }
 
 

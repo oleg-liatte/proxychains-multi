@@ -10,8 +10,8 @@
 #include <string>
 #include <iostream>
 
-
-#define TRACE(x) do { if(global_config.trace) { *global_config.trace << x << std::flush; } } while(0)
+#define TRACE(x) do { if(global_config.trace != 0) { (*global_config.trace) << x << std::flush; } } while(0)
+//#define TRACE(x) do { std::cerr << x << std::flush; } while(0)
 
 
 inline const char* nullToEmpty(const char* s)
@@ -149,7 +149,10 @@ struct proxychains_config
         default_filter_action(FILTER_SKIP),
         trace(0)
     {
-        setTrace("/dev/stderr", true);
+        if(isatty(STDERR_FILENO))
+        {
+            setTrace(&std::cerr);
+        }
     }
 
     ~proxychains_config()
@@ -157,8 +160,13 @@ struct proxychains_config
         resetTrace();
     }
 
-    void resetTrace();
+    void setTrace(std::ostream* stream);
     void setTrace(const char* file, bool tty_only);
+
+    void resetTrace()
+    {
+        setTrace(0);
+    }
 
     bool read();
 
@@ -166,6 +174,7 @@ struct proxychains_config
 
     bool quiet_mode;
     bool proxy_dns;
+    std::ostream* trace;
     chains_t chains;
 
     // default values
@@ -174,7 +183,6 @@ struct proxychains_config
     int tcp_connect_timeout;
     int tcp_read_timeout;
     filter_action default_filter_action;
-    std::ostream* trace;
 
 };
 

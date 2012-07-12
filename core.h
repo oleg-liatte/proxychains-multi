@@ -39,8 +39,7 @@ typedef enum {RANDOMLY,FIFOLY} select_type;
 int select_and_connect_proxy_chain(
     int sock,
     in_addr_t target_ip,
-    unsigned short target_port,
-    proxychains_config* config);
+    unsigned short target_port);
 
 struct hostent* proxy_gethostbyname(const char *name);
 

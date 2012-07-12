@@ -1,5 +1,6 @@
 %{
 
+#include <unistd.h>
 #include <string.h>
 
 #include <sstream>
@@ -58,7 +59,6 @@
 
 /* non-terminals */
 %type <naf> net_addr_filter
-%type <s> trace_file;
 
 /* destructors */
 %destructor { free($$); } STRING
@@ -97,11 +97,41 @@ global_param:
         {
             config->resetTrace();
         }
-    | ID_TRACE trace_file
+    | ID_TRACE ID_STDOUT
+        {
+            config->setTrace(&std::cout);
+        }
+    | ID_TRACE ID_TTY_ONLY ID_STDOUT
+        {
+            if(isatty(STDOUT_FILENO))
+            {
+                config->setTrace(&std::cout);
+            }
+            else
+            {
+                config->resetTrace();
+            }
+        }
+    | ID_TRACE ID_STDERR
+        {
+            config->setTrace(&std::cerr);
+        }
+    | ID_TRACE ID_TTY_ONLY ID_STDERR
+        {
+            if(isatty(STDERR_FILENO))
+            {
+                config->setTrace(&std::cerr);
+            }
+            else
+            {
+                config->resetTrace();
+            }
+        }
+    | ID_TRACE STRING
         {
             config->setTrace($2, false);
         }
-    | ID_TRACE ID_TTY_ONLY trace_file
+    | ID_TRACE ID_TTY_ONLY STRING
         {
             config->setTrace($3, true);
         }
@@ -128,22 +158,6 @@ global_param:
     | ID_DEFAULT_FILTER_ACTION FILTER_ACTION
         {
             config->default_filter_action = $2;
-        }
-    ;
-
-trace_file:
-    ID_STDOUT
-        {
-            $$ = strdup("/dev/stdout");
-        }
-    | ID_STDERR
-        {
-            $$ = strdup("/dev/stderr");
-        }
-    | STRING
-        {
-            $$ = $1;
-            $1 = 0;
         }
     ;
 

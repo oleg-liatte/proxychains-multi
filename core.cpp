@@ -719,12 +719,11 @@ static filter_action get_filter_action(
 int select_and_connect_proxy_chain(
     int sock,
     in_addr_t target_ip,
-    unsigned short target_port,
-    proxychains_config* config)
+    unsigned short target_port)
 {
     // find matching chain
-    for(proxychains_config::chains_t::iterator i = config->chains.begin();
-        i != config->chains.end();
+    for(proxychains_config::chains_t::iterator i = global_config.chains.begin();
+        i != global_config.chains.end();
         i++)
     {
 #ifdef DEBUG
