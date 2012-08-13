@@ -27,6 +27,10 @@
 #include <fcntl.h>
 #include <dlfcn.h>
 
+#ifdef USE_THREADS
+#include <pthread.h>
+#endif
+
 #include "core.h"
 #include "config.h"
 
@@ -40,32 +44,32 @@
 namespace
 {
 
-    class LightLock
+#ifdef USE_THREADS
+    class Mutex
     {
     public:
-        LightLock()
+        Mutex()
         {
+            pthread_mutex_init(&m_mutex, NULL);
         }
 
-        ~LightLock()
+        ~Mutex()
         {
+            pthread_mutex_destroy(&m_mutex);
         }
 
         void lock()
         {
-            while(__sync_lock_test_and_set(&m_locked, 1) == 1)
-            {
-                usleep(10000);
-            }
+            pthread_mutex_lock(&m_mutex);
         }
 
         void unlock()
         {
-            __sync_lock_release(&m_locked);
+            pthread_mutex_unlock(&m_mutex);
         }
 
     private:
-        long m_locked;
+        pthread_mutex_t m_mutex;
 
     };
 
@@ -89,11 +93,42 @@ namespace
 
     };
 
+#else
+
+    class Mutex
+    {
+    public:
+        void lock()
+        {
+        }
+
+        void unlock()
+        {
+        }
+
+    };
+
+    template<class T>
+    class Locker
+    {
+    public:
+        Locker(T*)
+        {
+        }
+
+        ~Locker()
+        {
+        }
+
+    };
+
+#endif
+
     //bool init_lib() __attribute__((constructor));
     bool init_lib()
     {
-        static LightLock lock;
-        Locker<LightLock> locker(&lock);
+        static Mutex mutex;
+        Locker<Mutex> locker(&mutex);
 
         static bool initialized = false;
         if(!initialized)

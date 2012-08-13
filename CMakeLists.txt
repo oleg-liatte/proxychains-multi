@@ -1,6 +1,11 @@
 project(proxychains-ng)
 cmake_minimum_required(VERSION 2.8)
 
+option(USE_THREADS "Enable thread-safety" ON)
+if(USE_THREADS)
+    add_definitions(-DUSE_THREADS)
+endif()
+
 find_package(BISON)
 find_package(FLEX)
 
@@ -37,8 +42,15 @@ set_target_properties(proxychains-ng
     SOVERSION "1"
 )
 
+if(USE_THREADS)
+    set(THREAD_LIBS "pthread")
+else()
+    set(THREAD_LIBS "")
+endif()
+
 target_link_libraries(proxychains-ng
     dl
+    ${THREAD_LIBS}
 )
 
 install(TARGETS proxychains-ng DESTINATION /usr/lib)

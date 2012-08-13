@@ -12,8 +12,15 @@ HOMEPAGE=""
 KEYWORDS="amd64 ~x86"
 SLOT="0"
 LICENSE="GPL-2"
-IUSE=""
+IUSE="threads"
 
 RDEPEND="${RDEPEND}
 	net-dns/bind-tools"
 
+src_configure()
+{
+    local mycmakeargs="
+        $(cmake-utils_use threads USE_THREADS)
+        "
+    cmake-utils_src_configure
+}
