@@ -3,8 +3,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <stdlib.h>
 
@@ -29,6 +29,12 @@ namespace
         bool r = isatty(fd);
         close(fd);
         return r;
+    }
+
+    template<typename T, size_t count>
+    size_t countof(const T (&)[count])
+    {
+        return count;
     }
 
 }
@@ -187,22 +193,73 @@ void proxychains_config::setTrace(const char* file, bool tty_only)
 }
 
 
+void proxychains_config::clear()
+{
+    *this = proxychains_config();
+}
+
+
 bool proxychains_config::read()
 {
     config_parser_context ctx;
+    time_t ct = 0;
 
     {
         char buf[1024];
         snprintf(buf, sizeof(buf), "%s/.proxychains-ng/proxychains-ng.conf", getenv("HOME"));
-        if(!ctx.open_file("./proxychains-ng.conf") &&
-            !ctx.open_file(buf) &&
-            !ctx.open_file("/etc/proxychains-ng.conf"))
+        const char* const configFiles[] = {
+            "./proxychains-ng.conf",
+            buf,
+            "/etc/proxychains-ng.conf"
+        };
+
+        const char* configFile = 0;
+
+        // search config file
+        for(size_t i = 0; i != countof(configFiles); i++)
         {
-            cerr << "Couldn't locate proxychains.conf" << endl;
+            const char* fn = configFiles[i];
+            struct stat s;
+            int r = stat(fn, &s);
+            if(r != 0)
+            {
+                // file doesn't exist
+                continue;
+            }
+
+            time_t ft = s.st_mtime;
+            if(ft == 0)
+            {
+                ft = 1; // read config only once
+            }
+
+            if(configTime != 0 && ft <= configTime)
+            {
+                // already up-to-date
+                return true;
+            }
+            else
+            {
+                // (re)read config
+                configFile = fn;
+                ct = ft;
+                break;
+            }
+        }
+
+        if(!configFile)
+        {
+            cerr << "couldn't locate proxychains.conf" << endl;
+            return false;
+        }
+
+        if(!ctx.open_file(configFile))
+        {
             return false;
         }
     }
 
+    clear();
     if(configparse(&ctx, this) != 0)
     {
         cerr << ctx.error() << endl;
@@ -213,5 +270,6 @@ bool proxychains_config::read()
     cerr << *this;
 #endif
 
+    configTime = ct;
     return true;
 }

@@ -811,28 +811,35 @@ struct hostent* proxy_gethostbyname(const char *name)
 
     // TODO: this works only once, so cache it  ...
     //      later
-    while (hp=gethostent())
-        if (!strcmp(hp->h_name,name))
+    while(hp=gethostent())
+    {
+        if(!strcmp(hp->h_name,name))
+        {
             return hp;
+        }
+    }
 
-    if(pipe(pipe_fd))
+    if(pipe(pipe_fd) != 0)
+    {
         goto err;
-    pid = fork();
-    switch(pid) {
+    }
 
+    pid = fork();
+    switch(pid)
+    {
     case 0: // child
         TRACE("|DNS-request| " << name  << endl);
         dup2(pipe_fd[1],1);
         //dup2(pipe_fd[1],2);
         //    putenv("LD_PRELOAD=");
         execlp("proxyresolv","proxyresolv",name,NULL);
-        perror("can't exec proxyresolv");
+        perror("couldn't exec proxyresolv");
         exit(2);
 
     case -1: //error
         close(pipe_fd[0]);
         close(pipe_fd[1]);
-        perror("can't fork");
+        perror("couldn't fork");
         goto err;
 
     default:

@@ -43,6 +43,7 @@ bool config_parser_context::open_file(const char* fileName)
     }
     else
     {
+        std::cerr << "couldn't open\"" << fileName << "\" for reading" << std::endl;
         return false;
     }
 }

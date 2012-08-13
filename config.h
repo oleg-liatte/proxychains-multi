@@ -142,12 +142,13 @@ struct proxychains_config
     proxychains_config():
         quiet_mode(false),
         proxy_dns(false),
+        trace(0),
         type(DYNAMIC_TYPE),
         chain_len(1),
         tcp_connect_timeout(10 * 1000),
         tcp_read_timeout(4 * 1000),
         default_filter_action(FILTER_SKIP),
-        trace(0)
+        configTime(0)
     {
         if(isatty(STDERR_FILENO))
         {
@@ -168,6 +169,7 @@ struct proxychains_config
         setTrace(0);
     }
 
+    void clear();
     bool read();
 
     typedef std::vector<proxy_chain> chains_t;
@@ -183,6 +185,8 @@ struct proxychains_config
     int tcp_connect_timeout;
     int tcp_read_timeout;
     filter_action default_filter_action;
+
+    time_t configTime;
 
 };
 

@@ -40,104 +40,146 @@
 namespace
 {
 
+    class LightLock
+    {
+    public:
+        LightLock()
+        {
+        }
+
+        ~LightLock()
+        {
+        }
+
+        void lock()
+        {
+            while(__sync_lock_test_and_set(&m_locked, 1) == 1)
+            {
+                usleep(10000);
+            }
+        }
+
+        void unlock()
+        {
+            __sync_lock_release(&m_locked);
+        }
+
+    private:
+        long m_locked;
+
+    };
+
+    template<class T>
+    class Locker
+    {
+    public:
+        Locker(T* lock):
+            m_lock(lock)
+        {
+            m_lock->lock();
+        }
+
+        ~Locker()
+        {
+            m_lock->unlock();
+        }
+
+    private:
+        T* m_lock;
+
+    };
+
     //bool init_lib() __attribute__((constructor));
     bool init_lib()
     {
+        static LightLock lock;
+        Locker<LightLock> locker(&lock);
+
         static bool initialized = false;
-        static bool init_ok = false;
+        if(!initialized)
+        {
+            PDEBUG("proxychains-ng-1.0\n");
 
-        if(initialized)
-        {
-            return init_ok;
-        }
+            true_connect = (connect_t)dlsym(RTLD_NEXT, "connect");
+            if (!true_connect)
+            {
+                fprintf(stderr, "Cannot load symbol 'connect' %s\n", dlerror());
+                exit(1);
+            }
+            else
+            {
+                PDEBUG( "loaded symbol 'connect' real addr %p  wrapped addr %p\n",
+                true_connect, connect);
+            }
 
-        PDEBUG("proxychains-ng-1.0\n");
+            true_gethostbyname = (gethostbyname_t)dlsym(RTLD_NEXT, "gethostbyname");
+            if (!true_gethostbyname)
+            {
+                fprintf(stderr, "Cannot load symbol 'gethostbyname' %s\n",
+                        dlerror());
+                exit(1);
+            }
+            else
+            {
+                PDEBUG( "loaded symbol 'gethostbyname' real addr %p  wrapped addr %p\n",
+                true_gethostbyname, gethostbyname);
+            }
 
-        true_connect = (connect_t)dlsym(RTLD_NEXT, "connect");
-        if (!true_connect)
-        {
-            fprintf(stderr, "Cannot load symbol 'connect' %s\n", dlerror());
-            exit(1);
-        }
-        else
-        {
-            PDEBUG( "loaded symbol 'connect' real addr %p  wrapped addr %p\n",
-            true_connect, connect);
-        }
+            true_getaddrinfo = (getaddrinfo_t)dlsym(RTLD_NEXT, "getaddrinfo");
+            if (!true_getaddrinfo)
+            {
+                fprintf(stderr, "Cannot load symbol 'getaddrinfo' %s\n",
+                        dlerror());
+                exit(1);
+            }
+            else
+            {
+                PDEBUG( "loaded symbol 'getaddrinfo' real addr %p  wrapped addr %p\n",
+                    true_getaddrinfo, getaddrinfo);
+            }
 
-        true_gethostbyname = (gethostbyname_t)dlsym(RTLD_NEXT, "gethostbyname");
-        if (!true_gethostbyname)
-        {
-            fprintf(stderr, "Cannot load symbol 'gethostbyname' %s\n",
-                    dlerror());
-            exit(1);
-        }
-        else
-        {
-            PDEBUG( "loaded symbol 'gethostbyname' real addr %p  wrapped addr %p\n",
-            true_gethostbyname, gethostbyname);
-        }
+            true_freeaddrinfo = (freeaddrinfo_t)dlsym(RTLD_NEXT, "freeaddrinfo");
+            if (!true_freeaddrinfo)
+            {
+                fprintf(stderr, "Cannot load symbol 'freeaddrinfo' %s\n",
+                        dlerror());
+                exit(1);
+            }
+            else
+            {
+                PDEBUG( "loaded symbol 'freeaddrinfo' real addr %p  wrapped addr %p\n",
+                    true_freeaddrinfo, freeaddrinfo);
+            }
 
-        true_getaddrinfo = (getaddrinfo_t)dlsym(RTLD_NEXT, "getaddrinfo");
-        if (!true_getaddrinfo)
-        {
-            fprintf(stderr, "Cannot load symbol 'getaddrinfo' %s\n",
-                    dlerror());
-            exit(1);
-        }
-        else
-        {
-            PDEBUG( "loaded symbol 'getaddrinfo' real addr %p  wrapped addr %p\n",
-                true_getaddrinfo, getaddrinfo);
-        }
+            true_gethostbyaddr = (gethostbyaddr_t)dlsym(RTLD_NEXT, "gethostbyaddr");
+            if (!true_gethostbyaddr)
+            {
+                fprintf(stderr, "Cannot load symbol 'gethostbyaddr' %s\n",
+                        dlerror());
+                exit(1);
+            }
+            else
+            {
+                PDEBUG( "loaded symbol 'gethostbyaddr' real addr %p  wrapped addr %p\n",
+                    true_gethostbyaddr, gethostbyaddr);
+            }
 
-        true_freeaddrinfo = (freeaddrinfo_t)dlsym(RTLD_NEXT, "freeaddrinfo");
-        if (!true_freeaddrinfo)
-        {
-            fprintf(stderr, "Cannot load symbol 'freeaddrinfo' %s\n",
-                    dlerror());
-            exit(1);
-        }
-        else
-        {
-            PDEBUG( "loaded symbol 'freeaddrinfo' real addr %p  wrapped addr %p\n",
-                true_freeaddrinfo, freeaddrinfo);
-        }
+            true_getnameinfo = (getnameinfo_t)dlsym(RTLD_NEXT, "getnameinfo");
+            if (!true_getnameinfo) {
+                fprintf(stderr, "Cannot load symbol 'getnameinfo' %s\n",
+                        dlerror());
+                exit(1);
+            }
+            else
+            {
+                PDEBUG( "loaded symbol 'getnameinfo' real addr %p  wrapped addr %p\n",
+                    true_getnameinfo, getnameinfo);
+            }
 
-        true_gethostbyaddr = (gethostbyaddr_t)dlsym(RTLD_NEXT, "gethostbyaddr");
-        if (!true_gethostbyaddr)
-        {
-            fprintf(stderr, "Cannot load symbol 'gethostbyaddr' %s\n",
-                    dlerror());
-            exit(1);
-        }
-        else
-        {
-            PDEBUG( "loaded symbol 'gethostbyaddr' real addr %p  wrapped addr %p\n",
-                true_gethostbyaddr, gethostbyaddr);
-        }
-
-        true_getnameinfo = (getnameinfo_t)dlsym(RTLD_NEXT, "getnameinfo");
-        if (!true_getnameinfo) {
-            fprintf(stderr, "Cannot load symbol 'getnameinfo' %s\n",
-                    dlerror());
-            exit(1);
-        }
-        else
-        {
-            PDEBUG( "loaded symbol 'getnameinfo' real addr %p  wrapped addr %p\n",
-                true_getnameinfo, getnameinfo);
-        }
-
-        if(!global_config.read())
-        {
             initialized = true;
-            return false;
         }
 
-        init_ok = true;
-        initialized = true;
-        return true;
+        return global_config.read();
     }
 
 }
