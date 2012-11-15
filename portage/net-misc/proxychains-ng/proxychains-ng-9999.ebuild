@@ -22,12 +22,6 @@ DEPEND+="
 
 EGIT_REPO_URI="git://github.com/oleg-liatte/proxychains-ng.git https://github.com/oleg-liatte/proxychains-ng.git"
 
-src_unpack()
-{
-    echo "LD_PRELOAD=$LD_PRELOAD"
-    git-2_src_unpack
-}
-
 src_configure()
 {
     local mycmakeargs="
