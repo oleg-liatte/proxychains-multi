@@ -2,10 +2,9 @@
 echo "proxychains-ng-1.0"
 
 if [ $# = 0 ] ; then
-	echo "	usage:"
-	echo "		proxychains-ng <prog> [args]"
-	exit
+    echo "usage: proxychains-ng <prog> [args]"
+    exit
 fi
 
-export LD_PRELOAD=libproxychains-ng.so
+export LD_PRELOAD+=" libproxychains-ng.so"
 exec "$@"
