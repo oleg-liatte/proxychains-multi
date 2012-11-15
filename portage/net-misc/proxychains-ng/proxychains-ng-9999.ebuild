@@ -3,12 +3,12 @@
 # $Header: $
 
 EAPI=4
-inherit cmake-utils
+inherit cmake-utils git-2
 
 DESCRIPTION="Fork of proxychains with support of multiple chains. Chains are selected according to filters assigned to them."
-SRC_URI="${P}.tar.bz2"
+SRC_URI=""
 HOMEPAGE="https://github.com/oleg-liatte/proxychains-ng"
-KEYWORDS="amd64 ~x86"
+KEYWORDS="~amd64 ~x86"
 SLOT="0"
 LICENSE="GPL-2"
 IUSE="threads"
@@ -19,6 +19,14 @@ RDEPEND+="
 DEPEND+="
     sys-devel/flex
     sys-devel/bison"
+
+EGIT_REPO_URI="git://github.com/oleg-liatte/proxychains-ng.git https://github.com/oleg-liatte/proxychains-ng.git"
+
+src_unpack()
+{
+    echo "LD_PRELOAD=$LD_PRELOAD"
+    git-2_src_unpack
+}
 
 src_configure()
 {
