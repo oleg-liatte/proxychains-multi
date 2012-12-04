@@ -33,6 +33,6 @@ To build and install the project issue
 
     cmake . && make && make install
 
-cmake, flex and bison are prerequisites.
+cmake, flex and bison are prerequisites. Alternatively you can use ebuilds from 'portage' directory (if you're Gentoo user).
 
 You can export LD_PRELOAD="libproxychains-ng.so" at system level to automatically enforce every application on your system to use proxies.
