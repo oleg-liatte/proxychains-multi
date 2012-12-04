@@ -1,4 +1,6 @@
-This is a modified version of [proxychains](http://proxychains.sourceforge.net/). Inherited functionality allows passing any TCP connection from any application thru proxy server (or chain of proxy servers).
+This is a modified version of [proxychains](http://proxychains.sourceforge.net/) with support of multiple chains for different targets.
+
+Inherited functionality allows passing any TCP connection from any application thru proxy server (or chain of proxy servers).
 
 This project adds support of several different proxies (or chains of proxies) that can be used at the same time. Each proxy chain has a set of filters assigned to it. These filters are used to determine which chain to use for particular connection. 
 
