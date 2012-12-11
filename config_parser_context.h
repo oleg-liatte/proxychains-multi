@@ -6,6 +6,9 @@
 
 #include <string>
 
+
+class config_parser_context;
+
 #include "config.h"
 #include <config_parser.hpp>
 
