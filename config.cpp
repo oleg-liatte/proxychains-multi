@@ -206,11 +206,11 @@ bool proxychains_config::read()
 
     {
         char buf[1024];
-        snprintf(buf, sizeof(buf), "%s/.proxychains-ng/proxychains-ng.conf", getenv("HOME"));
+        snprintf(buf, sizeof(buf), "%s/.proxychains-multi.conf", getenv("HOME"));
         const char* const configFiles[] = {
-            "./proxychains-ng.conf",
+            "./proxychains-multi.conf",
             buf,
-            "/etc/proxychains-ng.conf"
+            "/etc/proxychains-multi.conf"
         };
 
         const char* configFile = 0;

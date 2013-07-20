@@ -1,4 +1,4 @@
-project(proxychains-ng)
+project(proxychains-multi)
 cmake_minimum_required(VERSION 2.8)
 
 option(USE_THREADS "Enable thread-safety" ON)
@@ -36,8 +36,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-DDEBUG)
 endif()
 
-add_library(proxychains-ng SHARED ${SOURCES})
-set_target_properties(proxychains-ng
+add_library(proxychains-multi SHARED ${SOURCES})
+set_target_properties(proxychains-multi
     PROPERTIES VERSION "1.0"
     SOVERSION "1"
 )
@@ -48,11 +48,11 @@ else()
     set(THREAD_LIBS "")
 endif()
 
-target_link_libraries(proxychains-ng
+target_link_libraries(proxychains-multi
     dl
     ${THREAD_LIBS}
 )
 
-install(TARGETS proxychains-ng DESTINATION /usr/lib)
-install(PROGRAMS proxychains-ng proxyresolv-ng DESTINATION /usr/bin)
-install(FILES proxychains-ng.conf.skel RENAME proxychains-ng.conf DESTINATION /etc)
+install(TARGETS proxychains-multi DESTINATION /usr/lib)
+install(PROGRAMS proxychains-multi proxyresolv-multi DESTINATION /usr/bin)
+install(FILES proxychains-multi.conf.skel RENAME proxychains-multi.conf DESTINATION /etc)

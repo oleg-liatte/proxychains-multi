@@ -1,0 +1,10 @@
+#!/bin/sh
+echo "proxychains-multi-1.0"
+
+if [ $# = 0 ] ; then
+    echo "usage: proxychains-multi <prog> [args]"
+    exit
+fi
+
+export LD_PRELOAD+=" libproxychains-multi.so"
+exec "$@"

@@ -133,7 +133,7 @@ namespace
         static bool initialized = false;
         if(!initialized)
         {
-            PDEBUG("proxychains-ng-1.0\n");
+            PDEBUG("proxychains-multi-1.0\n");
 
             true_connect = (connect_t)dlsym(RTLD_NEXT, "connect");
             if (!true_connect)
